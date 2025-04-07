@@ -1,3 +1,4 @@
+#include <grrlib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +8,9 @@
 #define MAX_UVS 1000
 #define MAX_LINE_LENGTH 256
 
-float cubeVerts[MAX_VERTICES][3];
+float vertices[MAX_VERTICES][3];
+float normals[MAX_NORMALS][3];
+float uvs[MAX_UVS][2];
 
 void parseObj(const char* filename, float vertices[MAX_VERTICES][3], float normals[MAX_NORMALS][3], float uvs[MAX_UVS][2]) {
     FILE *fp = fopen(filename, "r");
@@ -35,24 +38,31 @@ void parseObj(const char* filename, float vertices[MAX_VERTICES][3], float norma
     fclose(fp);
 }
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "Usage: %s <obj_file>\n", argv[0]);
-        return 1;
+int main(int argc, char **argv) {
+    // Initialize GRRLIB
+    GRRLIB_Init();
+    GRRLIB_SetBackgroundColour(0x00, 0x00, 0x00, 0xFF); // Black background
+
+    // Load the cube data
+    parseObj("cube.obj", vertices, normals, uvs);
+
+    // Main loop
+    while (1) {
+        GRRLIB_2dMode(); // Switch to 2D mode for rendering
+        GRRLIB_Camera3dSettings(0.0f, 0.0f, 5.0f, 0.0f, 0.0f, 0.0f); // Set camera
+
+        GRRLIB_3dMode(0.1f, 100.0f, 45.0f, true, false); // Switch to 3D mode
+
+        // Draw the cube
+        GRRLIB_SetLightAmbient(0x404040); // Set ambient light
+        for (int i = 0; i < MAX_VERTICES && vertices[i][0] != 0; i++) {
+            GRRLIB_DrawCube(vertices[i][0], vertices[i][1], vertices[i][2], 1.0f, 0xFFFFFF); // Draw each vertex
+        }
+
+        GRRLIB_Render(); // Render the frame
     }
-    const char* filename = argv[1];
-    float vertices[MAX_VERTICES][3] = {0};
-    float normals[MAX_NORMALS][3] = {0};
-    float uvs[MAX_UVS][2] = {0};
 
-    printf("OBJ Parser\n");
-    printf("==========\n");
-
-    parseObj(filename, vertices, normals, uvs);
-
-    for (int i = 0; i < MAX_VERTICES && vertices[i][0] != 0; i++) {
-        printf("Vertex %d: %f %f %f\n", i, vertices[i][0], vertices[i][1], vertices[i][2]);
-    }
-
+    // Clean up
+    GRRLIB_Exit();
     return 0;
 }
